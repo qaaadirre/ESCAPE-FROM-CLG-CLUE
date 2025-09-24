@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import Router from 'next/router'
+import dynamic from 'next/dynamic'
 
 export default function Admin() {
   const [token, setToken] = useState('')
   const [qrs, setQrs] = useState([])
   const [form, setForm] = useState({code:'', title:'', type:'basic', clues_json:'[]'})
-
+  const [liveScanCount, setLiveScanCount] = useState(0)
   useEffect(()=>{
     const t = localStorage.getItem('admin_token')
     if(t) {
@@ -43,10 +44,22 @@ export default function Admin() {
     window.location = '/api/analytics/export?format=csv'
   }
 
+  useEffect(()=>{
+    (async ()=>{
+      // dynamic import socket on client
+      const io = (await import('socket.io-client')).default;
+      const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const socket = io(base, { transports: ['websocket'], path: '/socket.io' });
+      socket.on('connect', ()=> console.log('socket connected'));
+      socket.on('scan', (p)=>{ setLiveScanCount(c=>c+1) });
+      // you can join rooms if needed
+    })();
+  },[])
+
   return (
     <div className="container p-6">
       <header className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Admin Panel</h1>
+        <h1 className="text-2xl font-bold">Admin Panel</h1><div className="text-sm text-gray-600">Live scans: {liveScanCount}</div>
         <div>
           {!token ? <button onClick={login} className="px-3 py-2 bg-blue-600 text-white rounded">Login</button> 
           : <button onClick={()=>{localStorage.removeItem('admin_token'); setToken(''); setQrs([])}} className="px-3 py-2 bg-gray-200 rounded">Logout</button>}

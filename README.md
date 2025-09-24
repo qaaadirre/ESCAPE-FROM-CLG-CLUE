@@ -64,3 +64,34 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000 npm run dev
 ## License
 MIT
 
+
+
+## Real-time (Socket.IO) — Live scan counters
+This project includes a Socket.IO server embedded in `server.js`. API `/api/scan` notifies the socket server via an internal HTTP call to `/socket/emit` so connected clients (Admin/Public) receive `scan` events in real-time.
+
+### Run with Socket.IO
+To run the app with the Socket.IO server locally:
+```bash
+npm install
+npm run start-server
+# or for development
+npm run dev-server
+```
+
+**Deployment note:** Vercel's serverless model is not suitable for long-lived WebSocket connections. To use Socket.IO in production either:
+- Deploy the custom server (`server.js`) to a Node host that supports persistent sockets (e.g., Render, Railway, Heroku, a VM), and point `NEXT_PUBLIC_BASE_URL` to that host.
+- Or run a separate Socket.IO server and let Next.js run on Vercel.
+
+## S3 uploads (CDN)
+An upload endpoint is available at `POST /api/upload` which accepts `multipart/form-data` field `file` and uploads to the configured S3 bucket.
+
+Environment variables to set:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+- `S3_BUCKET`
+
+The endpoint returns `{ url }` with a public S3 URL.
+
+**Security note:** For production do pre-signed upload URLs on the server (so clients upload directly to S3), and keep credentials secure.
+

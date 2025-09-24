@@ -1,11 +1,22 @@
 import Link from 'next/link'
 import useSWR from 'swr'
+import { useEffect, useState } from 'react'
 
 const fetcher = (url) => fetch(url).then(r=>r.json())
 
 export default function Home() {
   const { data } = useSWR('/api/qrs/public', fetcher)
   const qrs = data?.qrs || []
+  const [totalScans, setTotalScans] = useState(0)
+  useEffect(()=>{
+    (async ()=>{
+      const io = (await import('socket.io-client')).default;
+      const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const socket = io(base, { transports: ['websocket'] });
+      socket.on('scan', ()=> setTotalScans(c=>c+1));
+    })();
+  },[])
+
   return (
     <div className="container">
       <header className="flex items-center justify-between py-6">
@@ -13,6 +24,7 @@ export default function Home() {
         <div>
           <Link href="/admin"><a className="px-4 py-2 bg-blue-600 text-white rounded">Admin</a></Link>
         </div>
+      <div className="text-sm text-gray-600">Live scans: {totalScans}</div>
       </header>
 
       <main>
